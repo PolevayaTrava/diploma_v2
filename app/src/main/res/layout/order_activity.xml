@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingBottom="0dp"
+    android:paddingLeft="0dp"
+    android:paddingRight="0dp"
+    android:paddingTop="0dp">
+
+    <Button
+        android:id="@+id/ScanButton"
+        android:layout_width="60dp"
+        android:layout_marginLeft="350dp"
+        android:layout_marginTop="800dp"
+        android:layout_height="60dp"
+        android:onClick="scanClick"
+        android:text="+" />
+
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar3"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#CAC3C1"
+        android:minHeight="?attr/actionBarSize"
+        android:theme="?attr/actionBarTheme">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <EditText
+            android:id="@+id/search_edit_text"
+            android:layout_width="match_parent"
+            android:layout_marginEnd="20dp"
+            android:layout_toStartOf="@+id/search_button"
+            android:layout_height="wrap_content"
+            android:hint="Введите штрих-код товара"/>
+
+        <Button
+            android:id="@+id/search_button"
+            android:layout_alignParentEnd="true"
+            android:layout_width="60dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="80dp"
+            android:onClick="findClick"
+            android:text="🔍"/>
+
+        <Button
+            android:id="@+id/exit_button"
+            android:layout_width="60dp"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_marginEnd="10dp"
+            android:onClick="exitClick"
+            android:text="✖" />
+
+    </RelativeLayout>
+
+    </androidx.appcompat.widget.Toolbar>
+
+    <ListView
+        android:id="@+id/orderedItemsListView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/toolbar3"
+        android:textAlignment="textStart"
+        >
+
+    </ListView>
+</RelativeLayout>
+
