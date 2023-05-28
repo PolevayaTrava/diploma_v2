@@ -7,14 +7,17 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import androidx.appcompat.widget.Toolbar;
 
 import com.example.diploma_v2.Connection;
 import com.example.diploma_v2.R;
+import com.example.diploma_v2.adapters.ItemsAdapter;
 import com.example.diploma_v2.api.OrdersAPI;
 import com.example.diploma_v2.entity.Customer;
 import com.example.diploma_v2.entity.Employees;
+import com.example.diploma_v2.entity.Order;
 import com.example.diploma_v2.entity.Orders;
 
 import java.time.LocalDate;
@@ -31,9 +34,18 @@ public class OrdersActivity extends Activity {
 
     private static OrdersAPI ordersAPI;
     private static ArrayList<Orders> ordersList = new ArrayList<>();
-    private static Long selectedItem;
+    private static HashMap<Long, ArrayList<Orders>> ordersMap = new HashMap<>();
+    private static List<Long> ordersId = new ArrayList<>();
+    private static ArrayAdapter<Long> adapter;
     private Toolbar toolbar;
     private ListView listView;
+
+    private Long id;
+    private String date;
+    private String status;
+    private Customer customer;
+    private Employees manager;
+    private Employees picker;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,10 +56,7 @@ public class OrdersActivity extends Activity {
         toolbar = findViewById(R.id.toolbar2);
         toolbar.setTitle("Заказы");
 
-        List<Long> ordersId = new ArrayList<>();
         ordersList = new ArrayList<>();
-        ArrayAdapter<Long> adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, ordersId);
-
         ordersAPI = Connection.getApi().create(OrdersAPI.class);
         Call<List<Orders>> call = ordersAPI.findAll();
 
@@ -55,21 +64,26 @@ public class OrdersActivity extends Activity {
             @Override
             public void onResponse(Call<List<Orders>> call, Response<List<Orders>> response) {
 
-                for (int i = 0; i < response.body().size(); i++) {
-                    Long id = response.body().get(i).getOrderId();
-                    String date = response.body().get(i).getDate();
-                    String status = response.body().get(i).getStatus();
-                    Customer customer = response.body().get(i).getCustomer();
-                    Employees manager = response.body().get(i).getManager();
-                    Employees picker = response.body().get(i).getPicker();
-                    ordersId.add(i, id);
-                    ordersList.add(i, new Orders(id, date, status, customer, manager, picker));
+                if (ordersMap.isEmpty()) {
+                    for (int i = 0; i < response.body().size(); i++) {
+                        Long id = response.body().get(i).getOrderId();
+                        String date = response.body().get(i).getDate();
+                        String status = response.body().get(i).getStatus();
+                        Customer customer = response.body().get(i).getCustomer();
+                        Employees manager = response.body().get(i).getManager();
+                        Employees picker = response.body().get(i).getPicker();
+                        ordersId.add(i, id);
+                        ordersList.add(i, new Orders(id, date, status, customer, manager, picker));
+                    }
+                    ordersMap.put(id, ordersList);
                 }
+                getAdapter();
                 listView.setAdapter(adapter);
             }
 
             @Override
             public void onFailure(Call<List<Orders>> call, Throwable t) {
+                Toast.makeText(getApplicationContext(), "Нет доступных заказов!", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -81,9 +95,12 @@ public class OrdersActivity extends Activity {
                 nextActivity(ordersList, position);
             }
         });
-
-
     }
+
+    public void getAdapter() {
+        adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, ordersId);
+    }
+
 
     public void nextActivity(List<Orders> ordersList, int position) {
         String status = "Сборка";
@@ -101,7 +118,9 @@ public class OrdersActivity extends Activity {
         if (data != null) {
             String status = "Готов";
             int position = data.getIntExtra("position", 1);
-            changeStatus(status, position);
+            if (position != -1) {
+                changeStatus(status, position);
+            }
         }
     }
 

@@ -41,7 +41,6 @@ dependencies {
     implementation 'com.google.code.gson:gson:2.10.1'
     implementation 'org.springframework.security:spring-security-crypto:6.0.3'
     implementation 'commons-logging:commons-logging:1.2'
-    implementation 'io.github.pilgr:paperdb:2.7.2'
     implementation 'com.github.yuriy-budiyev:code-scanner:2.3.2'
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'

@@ -1,44 +1,35 @@
 package com.example.diploma_v2.activity;
 
 import android.Manifest;
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.view.View;
-import android.widget.AdapterView;
 import android.widget.EditText;
-import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
-import com.budiyev.android.codescanner.CodeScanner;
-import com.budiyev.android.codescanner.CodeScannerView;
-import com.budiyev.android.codescanner.DecodeCallback;
 import com.example.diploma_v2.Connection;
 import com.example.diploma_v2.R;
 import com.example.diploma_v2.adapters.ItemsAdapter;
 import com.example.diploma_v2.api.OrderAPI;
+import com.example.diploma_v2.api.OrdersAPI;
 import com.example.diploma_v2.entity.Items;
 import com.example.diploma_v2.entity.Order;
 import com.example.diploma_v2.entity.Orders;
-import com.google.zxing.Result;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -55,7 +46,6 @@ public class OrderActivity extends Activity {
 
     private static ArrayList<Order> orderedItemsList = new ArrayList<>();
     private static HashMap<Long, ArrayList<Order>> ordersOrderedItems = new HashMap<>();
-    private static HashMap<Long, Integer> counts = new HashMap<>();
 
     private static OrderAPI orderAPI = Connection.getApi().create(OrderAPI.class);
     private static ItemsAdapter adapter;
@@ -70,6 +60,7 @@ public class OrderActivity extends Activity {
     private static Long orderId;
     private static Integer position;
     private static Integer newCountFact;
+    private static Boolean flag = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -128,7 +119,9 @@ public class OrderActivity extends Activity {
     public void findClick(View view) {
         String findCode = textView.getText().toString();
         if (!findCode.isEmpty()) {
-            findItem(findCode);
+            if (!findItem(findCode)) {
+                Toast.makeText(getApplicationContext(), "Товар не найден!", Toast.LENGTH_SHORT).show();
+            }
         }
         else {
             Toast.makeText(getApplicationContext(), "Строка поиска пустая!", Toast.LENGTH_SHORT).show();
@@ -139,19 +132,16 @@ public class OrderActivity extends Activity {
         exitAlert();
     }
 
-    public void findItem(String findCode) {
+    public boolean findItem(String findCode) {
         orderedItemsList = ordersOrderedItems.get(orderId);
 
-        for (int position = 0; position < orderedItemsList.size(); position++) {
-            if (orderedItemsList.get(position).getItemId().equals(findCode)) {
-                Order order = orderedItemsList.get(position);
+        for (Order order : orderedItemsList) {
+            if (order.getItemId().equals(findCode)) {
                 countAlert(order, findCode, position);
+                return true;
             }
-            else {
-                Toast.makeText(getApplicationContext(), "Товар не найден!", Toast.LENGTH_SHORT).show();
-            }
-
         }
+        return false;
     }
 
     public void countAlert(Order order, String findCode, Integer position) {
@@ -168,7 +158,12 @@ public class OrderActivity extends Activity {
             public void onClick(DialogInterface dialog, int which) {
 
                 if (!editCount.getText().toString().isEmpty()) {
-                    newCountFact = order.getCountFact() + Integer.parseInt(editCount.getText().toString());
+                    if (order.getCountFact() < order.getCount()) {
+                        newCountFact = order.getCountFact() + Integer.parseInt(editCount.getText().toString());
+                    }
+                    else if (order.getCountFact() > order.getCount()) {
+                        newCountFact = Integer.parseInt(editCount.getText().toString());
+                    }
                 } else {
                     newCountFact = order.getCountFact() + 1;
                 }
@@ -181,20 +176,17 @@ public class OrderActivity extends Activity {
                 else if (newCountFact.equals(order.getCount())) {
                 }
                 order.setCountFact(newCountFact);
-
                 Call<Order> call = orderAPI.updateOrder(orderId, Long.valueOf(findCode), order);
 
                 call.enqueue(new Callback<Order>() {
                     @Override
                     public void onResponse(Call<Order> call, Response<Order> response) {
-                        System.out.println(response.code());
                     }
 
                     @Override
                     public void onFailure(Call<Order> call, Throwable t) {
                     }
                 });
-
                 adapter.notifyDataSetChanged();
                 newCountFact = 0;
             }
@@ -212,23 +204,30 @@ public class OrderActivity extends Activity {
     }
     public void exitAlert() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Внимание")
-                .setMessage("Вы уверены, что хотите закрыть заказ?")
-                .setPositiveButton("Да", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        Intent intent = new Intent(OrderActivity.this, OrdersActivity.class);
-                        intent.putExtra("position", position);
-                        setResult(RESULT_OK, intent);
-                        finish();
-                    }
-                })
-                .setNegativeButton("Отмена", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.cancel();
-                    }
-                });
+
+        builder.setTitle("Внимание");
+        if (adapter.getCountDone().get(orderId) == orderedItemsList.size()) {
+            builder.setMessage("Вы уверены, что хотите закрыть заказ?");
+        }
+        else {
+            builder.setMessage("Вы уверены, что хотите выйти?");
+            position = -1;
+        }
+        builder.setPositiveButton("Да", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                Intent intent = new Intent(OrderActivity.this, OrdersActivity.class);
+                intent.putExtra("position", position);
+                setResult(RESULT_OK, intent);
+                finish();
+            }
+        })
+        .setNegativeButton("Отмена", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+            }
+        });
         builder.create().show();
     }
 
@@ -245,7 +244,7 @@ public class OrderActivity extends Activity {
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
         if (requestCode == 200) {

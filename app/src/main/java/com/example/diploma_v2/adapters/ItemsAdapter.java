@@ -18,11 +18,14 @@ import com.example.diploma_v2.entity.Order;
 import com.example.diploma_v2.entity.Orders;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class ItemsAdapter extends BaseAdapter {
     Context ctx;
     LayoutInflater lInflater;
     ArrayList<Order> objects;
+    Integer countGet = 0;
+    HashMap<Long, Integer> countDone = new HashMap<>();
 
 
     public ItemsAdapter(Context context, ArrayList<Order> orderedItemsList) {
@@ -37,6 +40,7 @@ public class ItemsAdapter extends BaseAdapter {
         return objects.size();
     }
 
+    public HashMap<Long, Integer> getCountDone() { return countDone; }
     @Override
     public Object getItem(int position) {
         return objects.get(position);
@@ -63,23 +67,22 @@ public class ItemsAdapter extends BaseAdapter {
                 + " Полка: " + order.getShelf());
 
         if (order.getCount().equals(order.getCountFact())) {
-            ((TextView) view.findViewById(R.id.text1)).setBackgroundColor(Color.GREEN);
-            ((TextView) view.findViewById(R.id.text2)).setBackgroundColor(Color.GREEN);
-            ((TextView) view.findViewById(R.id.text3)).setBackgroundColor(Color.GREEN);
-            ((TextView) view.findViewById(R.id.text4)).setBackgroundColor(Color.GREEN);
-            ((TextView) view.findViewById(R.id.textDone)).setBackgroundColor(Color.GREEN);
-            ((TextView) view.findViewById(R.id.textNeed)).setBackgroundColor(Color.GREEN);
-            //((TextView) view.findViewById(R.id.text2)).setTextColor(Color.GREEN);
+            ((TextView) view.findViewById(R.id.text1)).setBackgroundColor(Color.parseColor("#b1ff9a"));
+            ((TextView) view.findViewById(R.id.text2)).setBackgroundColor(Color.parseColor("#b1ff9a"));
+            ((TextView) view.findViewById(R.id.text3)).setBackgroundColor(Color.parseColor("#b1ff9a"));
+            ((TextView) view.findViewById(R.id.text4)).setBackgroundColor(Color.parseColor("#b1ff9a"));
+            ((TextView) view.findViewById(R.id.textDone)).setBackgroundColor(Color.parseColor("#b1ff9a"));
+            ((TextView) view.findViewById(R.id.textNeed)).setBackgroundColor(Color.parseColor("#b1ff9a"));
+            countDone.put(order.getOrders().getOrderId(), countGet+=1);
 
         }
         else if (order.getCount() > order.getCountFact() && order.getCountFact() > 0 || order.getCountFact() > order.getCount()){
-            ((TextView) view.findViewById(R.id.text1)).setBackgroundColor(Color.RED);
-            ((TextView) view.findViewById(R.id.text2)).setBackgroundColor(Color.RED);
-            ((TextView) view.findViewById(R.id.text3)).setBackgroundColor(Color.RED);
-            ((TextView) view.findViewById(R.id.text4)).setBackgroundColor(Color.RED);
-            ((TextView) view.findViewById(R.id.textDone)).setBackgroundColor(Color.RED);
-            ((TextView) view.findViewById(R.id.textNeed)).setBackgroundColor(Color.RED);
-            //((TextView) view.findViewById(R.id.text2)).setTextColor(Color.RED);
+            ((TextView) view.findViewById(R.id.text1)).setBackgroundColor(Color.parseColor("#d45b4c"));
+            ((TextView) view.findViewById(R.id.text2)).setBackgroundColor(Color.parseColor("#d45b4c"));
+            ((TextView) view.findViewById(R.id.text3)).setBackgroundColor(Color.parseColor("#d45b4c"));
+            ((TextView) view.findViewById(R.id.text4)).setBackgroundColor(Color.parseColor("#d45b4c"));
+            ((TextView) view.findViewById(R.id.textDone)).setBackgroundColor(Color.parseColor("#d45b4c"));
+            ((TextView) view.findViewById(R.id.textNeed)).setBackgroundColor(Color.parseColor("#d45b4c"));
         }
 
         return view;
